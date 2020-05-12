@@ -1,67 +1,23 @@
-int boardLed = D7; // light indicating when light is received
-int lightsensor = A0; // light sensor
-int analogueVal = 0; // value of light
-
-int lightNotification = 0;
-int noLightNotification = 0;
-
-//set time it starts
-int startHour = 0;
-int startMinute = 0;
-// time it finishes
-int finisHour = 0;
-int finishMinute = 0;
-
-
+int photoResistor = A5;
+int photoResistorPower = A0;
+int lastPhotoResistorReport;
+char lightValue[4];   
 
 void setup() 
-{   
-    Serial.begin(9600);
-    pinMode(boardLed, OUTPUT);
-    pinMode(lightsensor, INPUT);
-
-}
-//publishes when its on
-void particlepublish()
-    {   
-        startTime = ("Photosynthesis started at: " + String(startHour) + ":" + String(startMinute));
-        Particle.publish("light", startTime, PRIVATE;
-        Particle.publish("light", String(analogueVal), PRIVATE);
-    }
-//publishes when off
-void particlepublishnolight()
-    {
-            endTime = ("Photosynthesis has stopped at: " + String(finishHour) + ":" + String(finishMinute));
-            Particle.publish("light", endTime, PRIVATE;
-            Particle.publish("light", String(analogueVal), PRIVATE);
-    }
-    
-void loop() 
 {
-    analogueVal = analogRead(lightsensor);
-    
-    if (analogueVal >= 100)
-    {   
-        digitalWrite(boardLed, HIGH);
-        delay(500);
-        digitalWrite(boadLed, LOW);
-        delay(500);
-        Serial.println(analogueVal);
-        startHour = Time.hour(Time.now());
-        startMInute = Time.minute(Time.now());
-        particlepublish();
-        //5 minute delay
-        delay(300000);
-    }
-    
-    else if(analogueVal < 100)
-    {
-        digitalWrite(boardLed, LOW);
-        Serial.println("Error no sunlight detected" + analogueVal);
-        finishHour = Time.hour(Time.now());
-        finishMinute = Time.minute(Time.now());
-        particlepublishnolight();
-        //5 minute delay
-        delay(300000);
-    }
+  pinMode(photoResistor, INPUT);
+  pinMode(photoResistorPower, OUTPUT);
+  digitalWrite(photoResistorPower, HIGH);
 }
+void loop() 
+{  
+  int lightLevel = analogRead(photoResistor); 
+  
+  if (lightLevel < 500) Particle.publish("lowlight", "dark", PRIVATE);
+  if (lightLevel >= 500 && lightLevel < 900) Particle.publish("light", "dim", PRIVATE);
+  if (lightLevel >= 900) Particle.publish("light", "bright", PRIVATE);
+  
+  sprintf(lightValue,"%d", lightLevel);   
+  Particle.publish("sensorValue", lightValue, PRIVATE);
+  delay(10000);  
+}  
